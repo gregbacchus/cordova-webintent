@@ -150,6 +150,34 @@ public class WebIntent extends CordovaPlugin {
                 //return new PluginResult(PluginResult.Status.OK);
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
                 return true;
+            } else if (action.equals("startService")) 
+            {
+                if (args.length() != 1) {
+                    //return new PluginResult(PluginResult.Status.INVALID_ACTION);
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
+                    return false;
+                }
+
+                // Parse the arguments
+                JSONObject obj = args.getJSONObject(0);
+
+                JSONObject extras = obj.has("extras") ? obj.getJSONObject("extras") : null;
+                Map<String, String> extrasMap = new HashMap<String, String>();
+
+                // Populate the extras if any exist
+                if (extras != null) {
+                    JSONArray extraNames = extras.names();
+                    for (int i = 0; i < extraNames.length(); i++) {
+                        String key = extraNames.getString(i);
+                        String value = extras.getString(key);
+                        extrasMap.put(key, value);
+                    }
+                }
+
+                startService(obj.getString("action"), obj.getString("package"), obj.getString("className"), extrasMap);
+                //return new PluginResult(PluginResult.Status.OK);
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+                return true;
             }
             //return new PluginResult(PluginResult.Status.INVALID_ACTION);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
@@ -213,5 +241,19 @@ public class WebIntent extends CordovaPlugin {
         }
 
         ((CordovaActivity)this.cordova.getActivity()).sendBroadcast(intent);
+    }
+
+    void startService(String action, String pkg, String className, Map<String, String> extras) {
+        Intent intent = new Intent();
+        intent.setAction(action);
+        if (pkg != null && className != null) {
+            intent.setClassName(pkg, className);
+        }
+        for (String key : extras.keySet()) {
+            String value = extras.get(key);
+            intent.putExtra(key, value);
+        }
+
+        ((CordovaActivity)this.cordova.getActivity()).startService(intent);
     }
 }
